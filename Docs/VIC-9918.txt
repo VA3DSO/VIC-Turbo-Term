@@ -1,0 +1,115 @@
+VIC-9918
+
+Creator: Marc Bronsard (mikoTuning)
+
+Board Includes:
+- RS232 - MC6850 ACIA
+- RTC
+- VDP?
+- 35K RAM
+
+Address Mapping:
+- IO2 section
+
+Memory Locations:
+$9900 - Control Status (RS=0) [39168]
+$9901 - Tx/Rx Data (RS=1)     [39169]
+$9902 - Baud Rate Setting*    [39170]
+
+Baud Rate:
+- 0 = 1200 baud
+- 1 = 2400 baud
+- 2 = 4800 baud
+- 3 = 9600 baud
+- 4 = 19200 baud
+- 5 = 38400 baud
+
+Sample Program:
+From: https://commodorez.com/vicserial.html
+
+Tx Data:
+10 A=38912		            :REM THE STARTING ADDRESS OF THE DUAL SERIAL CART
+20 POKE A+6,130			    :REM SET TO 9600 BAUD, TURN ON THE LED
+30 POKE A,3 			    :REM RESET SERIAL PORT A
+40 POKE A,85 			    :REM SET FOR /16, 8N1, RTS HIGH, DISABLE IRQ
+50 GET C$:IF C$="" THEN 50 	:REM GET CHARACTER FROM KEYBOARD
+60 WAIT A,2 			    :REM WAIT FOR TRANSMIT DATA REGISTER EMPTY FLAG
+70 POKE A+1,ASC(C$) 		:REM WRITE ASCII VALUE TO TRANSMIT DATA REGISTER
+80 GOTO 50 			        :REM REPEAT
+
+Rx Data:
+10 A=38912 		            :REM THE STARTING ADDRESS OF THE DUAL SERIAL CART
+20 POKE A+6,48 		        :REM SET TO 4800 BAUD, TURN OFF THE LED
+30 POKE A+2,3 		        :REM RESET SERIAL PORT B
+40 POKE A+2,85 		        :REM SET FOR /16, 8N1, RTS HIGH, DISABLE IRQ
+50 WAIT A+2,1 		        :REM WAIT FOR RECEIVE DATA REGISTER FULL FLAG
+60 B=PEEK(A+3) 		        :REM READ RECEIVE DATA REGISTER
+70 PRINT CHR$(B); 	        :REM PRINT CHARACTER TO SCREEN
+80 GOTO 50 		            :REM REPEAT
+
+Board Layout:
+                       +--------+
++----------------------+   (0)  +----------------------+
+| +---+   :::::(2)     +--------+       -        (5)o  |
+| |   |   |||| (3)                      - (4)          |
+| |   |                                 -     ______   |
+| |(1)|   .        +------------------+      /      \  |
+| |   |   .  .     |                  |      |  (8) |  |
+| |   |   .  .     |       (7)        |      |      |  |
+| |   |    (6)     +------------------+      \______/  |
+| +---+         _                                      |
+|           (9)|_|      --   --(10)                    |
+|                                                      |
+|  +--------+         +-----+                  +-----+ |
+|  |        |      -- |     | --            -- |     | |
+|  |  (11)  |  --     |(13) |         ______.  |(15) | |
+|  |        | (12) -- |     | --       (14)    +-----+ |
+|  +--------+         +-----+                          | 
+|                                                      |
+|                   --  --  -- (16)                    |
+|                                                      |
++--------+------------------------------------+--------+
+         |                (17)                |
+         +------------------------------------+
+
+
+0 - 9 pin male connector
+1 - Winbond W27C512-45Z chip
+    - 64K x 8 EEPROM holding config, menu, routines, etc
+2 - J2: five 2-pin jumpers
+3 - R1, R2, R3, R4 - resistors?
+4 - R5, R6, R7 - resistors?, D1, D2, D3 - LEDs?
+5 - Reset switch with R11 - resistor?
+6 - Jumper holes:
+    - J3: TPO, TP1, GND
+    - J1: VCC, PIN 9
+7 - MC68850P - 00T6A chip
+    - RS-232 UART connected to 9-pin connector
+8 - CR2032 Cell
+9 - *Y2: E4.9151 O CCN36KK (????)
+    - 4.9152 MHz oscillator used by ACIA clock and CPLD timing
+10- C13, C15 - capacitors?
+11- ISSI IS62C1024AL - 35QL1 D1AK 1305 2536 chip
+    - 35 RAM expansion (actually 128K x 8!)
+12- C1 capacitor?
+13- ALTERA MAX 7000 CPLD EPM7128STC100-15N W HEJ242307A chip
+    with C6, C7, C10, C11 capacitors around it
+    - brains of the board, address decoder (RAM and I/O mapping)
+    - chip select generation for RAM, ROM, RTC, ACIA
+14- some kind of small metal rod on two poles
+    - 32.768 kHz watch crystal for RTC
+15- DS1284Q + 0612A3 548AK chip
+    - RTC chip + NVRAM, connected to CR2032
+16- R12 (resistor?), C8, C9 (capacitors?)
+17- 22-blade dual sided male cartridge connector (for VIC cartridge port)
+
+
+
+
+
+
+
+
+
+
+

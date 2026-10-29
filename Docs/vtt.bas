@@ -1,0 +1,21 @@
+10 A = 39168        : REM ACIA base
+15 POKE A+2,12      : REM 1200 baud
+20 POKE A,3         : REM reset ACIA
+22 POKE A,85        : REM /16, 8N1, RTS high, IRQ off
+
+30 GET C$           : REM non-blocking keyboard poll
+32 IF C$<>"" THEN GOSUB 100
+
+40 IF (PEEK(A) AND 1)<>0 THEN GOSUB 200
+
+50 GOTO 30
+
+100 REM --- TRANSMIT ROUTINE ---
+110 IF (PEEK(A) AND 2)=0 THEN RETURN   : REM TDRE not ready
+120 POKE A+1, ASC(C$)
+130 RETURN
+
+200 REM --- RECEIVE ROUTINE ---
+210 B = PEEK(A+1)
+220 PRINT CHR$(B);
+230 RETURN

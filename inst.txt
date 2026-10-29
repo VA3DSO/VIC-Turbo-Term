@@ -1,0 +1,4 @@
+del vtt
+write vtt.prg vtt
+quit
+

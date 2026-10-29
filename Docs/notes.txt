@@ -1,0 +1,19 @@
+ACIA
+$9900 | 39168 - Control/Status
+$9901 | 39169 - Tx/Rx Data
+$9902 | 39170 - Baud Rate Register
+
+Baud Rates:
+12 = 1200
+24 = 2400
+96 = 9600
+192 = 19200
+38 = 38400
+
+Set baud rate example:
+LDA #96
+STA $9902
+- or -
+POKE 39170,96
+
+See vtt.bas for an example that works!

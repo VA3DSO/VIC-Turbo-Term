@@ -1,0 +1,116 @@
+﻿; ------------------------------------------------------------
+; DS1284 time read  (register map: datasheet page 5, base $9A00)
+; 12-hour format assumed.  TE = bit 7 of command register $9A0B.
+; ------------------------------------------------------------
+
+; Freeze: clear TE (bit 7) ONLY - preserve the rest of the
+; command register (interrupt routing + alarm mask bits).
+
+TIME
+
+                LDA $9A0B
+                AND #$7F        ; TE = 0, freeze external regs
+                STA $9A0B
+
+; ------------------------------------------------------------
+; Minutes  (reg $02 : 10min in bits 6-4, min in bits 3-0)
+; ------------------------------------------------------------
+
+                LDA $9A02
+                STA RTC_TEMP
+                AND #$0F
+                STA MN          ; minute units
+                LDA RTC_TEMP
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                AND #$07
+                STA MN_T        ; minute tens (0-5)
+
+; ------------------------------------------------------------
+; Hours  (reg $04 : 12/24 bit6, AM/PM bit5, 10HR bit4, hr 3-0)
+; ------------------------------------------------------------
+
+                LDA $9A04
+                STA RTC_TEMP
+                AND #$0F
+                STA HR          ; hour units
+                LDA RTC_TEMP
+                AND #$10        ; 10HR (bit 4)
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                STA HR_T        ; hour tens (0 or 1)
+                LDA RTC_TEMP
+                AND #$20        ; AM/PM (bit 5)
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                STA AMPM       ; 0 = AM, 1 = PM
+
+; ------------------------------------------------------------
+; Day of week  (reg $06 : bits 2-0)
+; ------------------------------------------------------------
+
+                LDA $9A06
+                AND #$07
+                STA DOW
+
+; ------------------------------------------------------------
+; Date  (reg $08 : 10date in bits 5-4, date in bits 3-0)
+; ------------------------------------------------------------
+
+                LDA $9A08
+                STA RTC_TEMP
+                AND #$0F
+                sta DY          ; date units
+                LDA RTC_TEMP
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                AND #$03
+                STA DY_T       ; date tens (0-3)
+
+; ------------------------------------------------------------
+; Month  (reg $09 : EOSC bit7, ESQW bit6, 10MO bit4, mo 3-0)
+; ------------------------------------------------------------
+          
+                LDA $9A09
+                STA RTC_TEMP
+                AND #$0F
+                sta MO           ; month units
+                LDA RTC_TEMP
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                AND #$01        ; 10MO ONLY - ignore ESQW/EOSC
+                STA MO_T     ; month tens (0 or 1)
+
+; ------------------------------------------------------------
+; Year  (reg $0A : 10year in bits 7-4, year in bits 3-0)
+; ------------------------------------------------------------
+
+                LDA $9A0A
+                STA RTC_TEMP
+                AND #$0F
+                sta YR          ; year units
+                LDA RTC_TEMP
+                LSR A
+                LSR A
+                LSR A
+                LSR A
+                STA YR_T      ; year tens (0-9)
+
+; ------------------------------------------------------------
+; Unfreeze: restore TE = 1 so registers resume updating
+; ------------------------------------------------------------
+
+                LDA $9A0B
+                ORA #$80        ; TE = 1
+                STA $9A0B
